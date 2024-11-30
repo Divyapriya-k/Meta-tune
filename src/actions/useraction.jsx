@@ -43,7 +43,7 @@ import{
            const obj={
              username:username
            }
-          const res = await fetch("https://meta-tunes.onrender.com/common/getsongs",{
+          const res = await fetch("https://meta-tunes-k34r.onrender.com/",{
            method: "POST",
            headers: {
              "Content-Type":"application/json"
