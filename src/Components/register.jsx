@@ -1,135 +1,105 @@
-import React, { useEffect , useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate} from 'react-router-dom';
-import { LOGINCOLOR, NAVCOLOR } from '../redux/propsaction';
-import Spinner from './spinner';
-import Nav from './nav';
-import { signup } from '../redux/action/useraction';
-import './login.css';
-import ErrorOutlinedIcon from '@mui/icons-material/ErrorOutlined';
-import { SIGNUP, SIGNUPERROR } from '../redux/actiontypes';
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import api from "../Services/api";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
-    const dispatch = useDispatch();
-    const store = useSelector((state)=>state);
-    const [spin, setspin] = useState(false);
-    const [data,setdata] = useState({
-        username:"",
-        password:""
-    })
-    const [error,seterror]=useState("");
-    useEffect(()=>{
-      dispatch({type:NAVCOLOR , payload:true});
-      document.body.style.backgroundColor="#09090B";
-                    // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[])
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
-    useEffect(()=>{
-        console.log(store.user.signuperror);
-        if(store.user.signuperror.length!==0){
-            seterror(store.user.signuperror);
-            setspin(false);
-        }
-         // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[store.user.signuperror])
-
-    useEffect(()=>{
-       if(spin===false){
-        const temp = document.querySelector("#register");
-        temp.style.opacity="1";
-       }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[spin])
-
-    useEffect(()=>{
-        if(store.user.signup===true){
-            setspin(false);
-            dispatch({type:SIGNUPERROR , payload:""});
-            dispatch({type:SIGNUP,payload:false});
-            navigate("/login");
-        }
-         // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[store.user.signup])
-
-    const Submit =()=>{
-        dispatch({type:SIGNUPERROR,payload:""});
-        if(data.username==="" || data.password===""){
-            seterror("Please enter the details");
-        }else{
-            const pass = data.password;
-             if(!pass.match(/[0-9]/)){
-                seterror("password must contains a number");
-             }else if(!pass.match(/[A-Z]/)){
-                seterror("password must contains a uppercase letter");
-             }else if(!pass.match(/[!@#$%&_]/)){
-                seterror("password must contains a symbol");
-             }else if(!pass.length>6){
-                seterror("password length should be more than 6");
-             }else{
-             const temp = document.querySelector("#register");
-             temp.style.opacity="0.4";
-             setspin(true);
-             dispatch(signup(data,navigate));
-             }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+     const response =  await api.post("/auth/register", { name, email, password });
+      toast.success(response.data.message);
+      setError(null);
+      navigate("/login");
+    } catch (error) {
+      setError(error.response.data.message);
+    toast.error(error.response.data.message);
     }
-}
-    const navigate = useNavigate();
+    setEmail("");
+    setPassword("");
+    setName("");
+  };
+
   return (
-    <>
-    {spin===true &&(
-        <Spinner className="spin" />
+    <div className="container mx-auto mt-8">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-md mx-auto bg-white p-8 shadow"
+      >
+        <h2 className="text-2xl mb-4 font-bold">Register</h2>
+        {error && (
+          <div className="bg-red-100 p-3 mb-4 text-red-600 rounded">
+            {error}
+          </div>
         )}
-    <div className="login" id='register'>
-        <Nav/>
-        <div className="other">
-        <div className="upper">
-        <h1>Register</h1>
-        <p>To continue enjoying MetaTunes</p>
-        </div>
-        <form action="POSt">
-            <div className="forminput">
-            <label htmlFor="Username" className='label' >Username :</label>
-            <input type="text"  maxLength={10} value={data.username} onChange={(e)=>{
-                setdata({...data , username:e.target.value})
-                seterror("");
-            }} />
-            </div>
-            <div className="forminput">
-            <label htmlFor="password" className='label' >Password :</label>
-            <input type="password" value={data.password} onChange={(e)=>{
-                setdata({...data , password:e.target.value})
-                seterror("");
-            }} />
-            </div>
-        </form>
-        {error.length!==0 &&(
-            <p className='error' ><ErrorOutlinedIcon/>{error}</p>
-        )}
-        <div className="submit">
-            <button onClick={(e)=>{
-                e.preventDefault();
-                Submit();
-                dispatch({type:LOGINCOLOR , payload:true});
-            }}>Register</button>
-            <p className='or' >or</p>
-            <p className='continue' onClick={(e)=>{
-               e.preventDefault();
-               dispatch({type:LOGINCOLOR , payload:false});
-               const data = JSON.parse(localStorage.getItem("sidebar"));
-               data.index=0;
-               localStorage.setItem("sidebar",JSON.stringify(data));
-               navigate('/');
-            }} >continue without Logging in</p>
-            <p className='acc'>Already have an account ? <span className='inside' onClick={(e)=>{
-                e.preventDefault();
-                dispatch({type:NAVCOLOR , payload:false});
-                navigate('/login');
-            }} >Login</span></p>
-        </div>
+        <p>
+          <label htmlFor="name" className="block mb-2 font-bold">
+            Name
+          </label>
+          <input
+            type="text"
+            name="name"
+            id="name"
+            placeholder="Enter the Your Name"
+            className="border w-full p-2 mb-4 rounded"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </p>
+        <p>
+          <label htmlFor="email" className="block mb-2 font-bold">
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            id="email"
+            placeholder="Enter the Your Email Id"
+            className="border w-full p-2 mb-4 rounded"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </p>
+        <p>
+          <label htmlFor="password" className="block mb-2 font-bold">
+            Password
+          </label>
+          <input
+            type={showPassword ? "text" : "password"}
+            name="password"
+            id="password"
+            placeholder="Enter the Your Password"
+            className="border w-full p-2 mb-4 rounded"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <br></br>
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="bg-red-100 p-2 mb-4 text-red-600  font-serif rounded"
+          >
+            {showPassword ? "Hide" : "Show"} password
+          </button>
+        </p>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white rounded font-serif p-2 text-xl"
+        >
+          Register
+        </button>
+        <div className="bg-red-100 p-2 mb-4 text-red-600  font-serif rounded mt-4">Already have an account? <a href="/login">Login</a></div>
+      </form>
     </div>
-    </div>
-    </>
-  )
-}
+  );
+};
 
 export default Register;
